@@ -1,0 +1,46 @@
+[Unit]
+Description=Bridge the UAC2 gadget capture stream into JACK and sum it at the Pisound output
+Documentation=https://github.com/arnegiacomo/pisound-tools
+Requires=usb-audio-gadget.service jack.service
+After=usb-audio-gadget.service jack.service
+# Switching Patchbox modules restarts jackd; follow it rather than staying down.
+PartOf=jack.service
+
+[Service]
+Type=exec
+Restart=always
+RestartSec=3
+# Covers every wait below; on expiry systemd fails the unit and Restart= retries.
+TimeoutStartSec=180
+Environment=JACK_NO_START_SERVER=1
+
+# Patchbox runs jackd promiscuous (see jack.service), which moves its socket and
+# shm to a group-owned path under /dev/shm. A client that does not set the same
+# value looks in the per-uid default, finds nothing, and reports the server as
+# not running. User=jack for access to those files; audio group for
+# hw:UAC2Gadget; RT limits because systemd does not apply the PAM limits jackd's
+# own session gets.
+Environment=JACK_PROMISCUOUS_SERVER=jack
+User=jack
+SupplementaryGroups=audio
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+
+# Requires= only guarantees jackd was started, not that it is accepting clients.
+# Both loops are bounded by TimeoutStartSec.
+ExecStartPre=/bin/sh -c 'until grep -q UAC2Gadget /proc/asound/cards; do sleep 1; done'
+ExecStartPre=/bin/sh -c 'until jack_lsp >/dev/null 2>&1; do sleep 1; done'
+
+# The gadget runs on the host's clock and JACK on the Pisound's, hence the
+# resampler. install.sh --zita swaps these two lines.
+ExecStart=/usr/bin/alsa_in -j usbaudio -d hw:UAC2Gadget -c 2 -r 48000
+#ExecStart=/usr/bin/zita-a2j -j usbaudio -d hw:UAC2Gadget -c 2 -r 48000
+
+# Bail as soon as the resampler dies rather than polling for a client that is
+# never coming back and burning the whole start timeout.
+ExecStartPost=/bin/sh -c 'until jack_lsp | grep -qx usbaudio:capture_2; do kill -0 $MAINPID 2>/dev/null || exit 1; sleep 0.2; done'
+ExecStartPost=/usr/bin/jack_connect usbaudio:capture_1 system:playback_1
+ExecStartPost=/usr/bin/jack_connect usbaudio:capture_2 system:playback_2
+
+[Install]
+WantedBy=multi-user.target

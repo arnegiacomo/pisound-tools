@@ -1,0 +1,14 @@
+[Unit]
+Description=USB Audio Class 2.0 gadget (Pisound USB Audio)
+Documentation=https://github.com/arnegiacomo/pisound-tools
+After=sys-kernel-config.mount
+Wants=sys-kernel-config.mount
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/usb-audio-gadget start
+ExecStop=/usr/local/bin/usb-audio-gadget stop
+
+[Install]
+WantedBy=multi-user.target
