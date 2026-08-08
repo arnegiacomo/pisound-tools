@@ -1,6 +1,6 @@
 # usb-audio-bridge
 
-Play audio from a computer through the Pisound output, mixed with whatever Patchbox is already.
+Play audio from a computer through the Pisound output, mixed with whatever Patchbox is already playing.
 
 The Pi turns up on the computer as an ordinary USB audio device, no driver
 needed, and that audio goes straight to the Pisound output. Whatever module you
@@ -13,9 +13,7 @@ instrument ──> Pisound in  ──> MODEP, Pd, ... ──┐
 computer   ──> USB-C       ──> UAC2Gadget     ──┘
 ```
 
-I built this for practising bass guitar. The bass goes into the Pisound and MODEP
-EQs it, the backing track comes from my mac, and both
-exit to my headphones or amp. The pisound doesn't touch the music, and the mac's volume buttons is the 'mix knob'. This setup also allows me to aff extra effects to just the bass sound without messing with the backing track.
+I built this for practising bass guitar. The bass goes into the Pisound and MODEP EQs it, the backing track comes from my mac, and both exit to my headphones or amp. MODEP doesn't touch the backing track, and the mac's output volume is the 'mix knob'. This setup also allows me to add effects to just the bass without messing with the backing track.
 
 > [!WARNING]
 > Not an officially supported Patchbox setup - two standalone systemd units
@@ -29,7 +27,7 @@ From the pi:
 curl -fsSL https://raw.githubusercontent.com/arnegiacomo/pisound-tools/main/usb-audio-bridge/install.sh | bash
 ```
 
-Reboot when it asks. Then plug the computer into the Pi's USB-C port and pick
+Reboot prompted. Then plug the computer into the Pi's USB-C port and pick
 *Pisound USB Audio* as its output. (Add `--zita` if `alsa_in` clicks)
 
 The same cable also carries a network link, so MOD-UI and SSH come along for

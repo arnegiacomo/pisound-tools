@@ -1,6 +1,6 @@
 # pisound-tools
 
-Small tools for a Raspberry Pi with a [Pisound](https://blokas.io/pisound/) HAT running [Patchbox OS](https://blokas.io/patchbox-os/), written for my own setup and kept here in case they are useful to someone else 🤷‍♂️.
+Collection of tools for a Raspberry Pi with a [Pisound](https://blokas.io/pisound/) HAT running [Patchbox OS](https://blokas.io/patchbox-os/), written for my own setup and kept here in case they are useful to someone else 🤷‍♂️.
 
 Each tool is its own directory with its own installer and README. Nothing depends on anything else here, so use whatever is needed.
 

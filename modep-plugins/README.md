@@ -3,8 +3,7 @@
 Gives MODEP the rest of the LV2 plugins Debian already ships.
 
 MODEP only scans `/var/modep/lv2`, and its own store is thin. Every
-LV2 plugin in the Debian archive installs to `/usr/lib/lv2`, where MODEP doesn't
-looks. This installs a pile of them and links them across.
+LV2 plugin in the Debian archive installs to `/usr/lib/lv2`, where MODEP doesn't check. This installs a pile of them and links them across.
 
 > [!WARNING]
 > Not an officially supported way to add plugins to MODEP. It links into
