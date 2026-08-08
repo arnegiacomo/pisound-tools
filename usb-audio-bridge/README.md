@@ -38,8 +38,8 @@ Set `USB_GADGET_ECM=0` to leave it out and have audio only.
 
 > [!NOTE]
 > Turn on Internet Sharing over the *Pisound USB Audio* interface (macOS: System
-> Settings → General → Sharing) for the hostname to work. Otherwise it's
-> `http://169.254.1.1`.
+> Settings → General → Sharing). The Pi picks up an address from it and gets a
+> route out, so `apt` works down the cable too.
 
 > [!IMPORTANT]
 > The Pi 4's only OTG-capable port is the USB-C power port, and the Pisound is

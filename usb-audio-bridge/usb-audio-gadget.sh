@@ -12,11 +12,13 @@ CONF=configs/c.1
 PRODUCT="${UAC2_PRODUCT:-Pisound USB Audio}"
 SRATE="${UAC2_SRATE:-48000}"
 WITH_ECM="${USB_GADGET_ECM:-1}"
-# Link-local, so the Mac's own self-assigned 169.254/16 address can reach it
-# without a DHCP server at either end. mDNS does the naming.
-GADGET_IP="${USB_GADGET_IP:-169.254.1.1/16}"
+NM_CON="${USB_GADGET_NM_CON:-pisound-usb}"
+# Set to force a fixed address and skip NetworkManager entirely.
+GADGET_IP="${USB_GADGET_IP:-}"
+FALLBACK_IP=169.254.1.1/16
 
 die() { echo "$*" >&2; exit 1; }
+have() { command -v "$1" >/dev/null 2>&1; }
 
 require_root() {
   [[ $EUID -eq 0 ]] || die "must run as root - configfs is not writable otherwise"
@@ -77,6 +79,35 @@ ecm_iface() {
   return 1
 }
 
+# DHCP when the host shares its connection, link-local when it does not. Pinning
+# a static address instead means no default route and no DNS the moment Internet
+# Sharing is switched on, which is the case people actually hit.
+configure_net_nm() {
+  local iface=$1 i
+  nmcli device set "$iface" managed yes >/dev/null 2>&1 || true
+
+  if ! nmcli -g NAME connection show 2>/dev/null | grep -qx "$NM_CON"; then
+    nmcli connection add type ethernet ifname "$iface" con-name "$NM_CON" \
+      ipv4.method auto ipv6.method link-local connection.autoconnect yes >/dev/null
+  fi
+  nmcli connection modify "$NM_CON" connection.interface-name "$iface" >/dev/null 2>&1 || true
+  # Absent before NetworkManager 1.30; harmless where it is not understood.
+  nmcli connection modify "$NM_CON" ipv4.link-local enabled >/dev/null 2>&1 || true
+  nmcli --wait 5 connection up "$NM_CON" >/dev/null 2>&1 || true
+
+  for i in $(seq 1 10); do
+    if ip -4 addr show "$iface" | grep -q 'inet '; then
+      echo "network on $iface via NetworkManager ($NM_CON)"
+      return 0
+    fi
+    sleep 1
+  done
+
+  # NetworkManager too old for link-local and no DHCP server on the far end.
+  ip addr replace "$FALLBACK_IP" dev "$iface"
+  echo "network on $iface at ${FALLBACK_IP%%/*} (no lease, pinned)"
+}
+
 configure_net() {
   local iface i
   for i in $(seq 1 25); do
@@ -86,8 +117,13 @@ configure_net() {
   [[ -n "${iface:-}" ]] || { echo "warning: ECM interface never appeared" >&2; return 0; }
 
   ip link set "$iface" up
-  ip addr replace "$GADGET_IP" dev "$iface"
-  echo "network on $iface at ${GADGET_IP%%/*}"
+
+  if [[ -z "$GADGET_IP" ]] && have nmcli; then
+    configure_net_nm "$iface"
+  else
+    ip addr replace "${GADGET_IP:-$FALLBACK_IP}" dev "$iface"
+    echo "network on $iface at ${GADGET_IP:-$FALLBACK_IP}"
+  fi
 }
 
 start() {

@@ -125,7 +125,7 @@ main() {
 
   echo "==> restarting MODEP"
   restart_modep
-  echo "==> done. Reload the MOD-UI page; the new plugins are in the sidebar."
+  echo "==> done. Reload the MOD-UI page; the new plugins are in the plugin bar."
 }
 
 # Called last so a truncated download cannot execute half a script.
