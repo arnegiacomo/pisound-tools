@@ -7,6 +7,7 @@ Each tool is its own directory with its own installer and README. Nothing depend
 | Tool | What it does |
 | --- | --- |
 | [`usb-audio-bridge`](usb-audio-bridge/) | Makes the Pi a USB audio device, so a computer's audio comes out of the Pisound alongside whatever Patchbox is running |
+| [`modep-plugins`](modep-plugins/) | Gives MODEP the LV2 plugins Debian ships |
 (more to come)
 
 These are not officially supported Patchbox setups.
